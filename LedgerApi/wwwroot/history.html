@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ledger — Audit Log</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen font-mono">
+
+    <nav class="bg-gray-900 border-b border-gray-800 px-8 py-4 flex gap-6">
+        <a href="index.html" class="text-green-400 font-bold text-lg">⬡ Ledger</a>
+        <a href="accounts.html" class="text-gray-400 hover:text-white">Accounts</a>
+        <a href="transactions.html" class="text-gray-400 hover:text-white">Transactions</a>
+        <a href="history.html" class="text-white">Audit Log</a>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-8 py-12">
+        <h1 class="text-3xl font-bold text-white mb-8">Audit Log</h1>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-6">
+            <div class="flex gap-3">
+                <input id="searchAccountId" type="text" placeholder="Enter Account ID"
+                       class="flex-1 bg-gray-800 border border-gray-700 rounded px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-400" />
+                <button onclick="loadHistory()"
+                        class="bg-green-500 hover:bg-green-400 text-black font-bold py-2 px-6 rounded">
+                    Load History
+                </button>
+            </div>
+        </div>
+
+        <div id="historyResult" class="text-gray-400 text-sm"></div>
+    </main>
+
+    <script>
+        const API = 'https://localhost:7047';
+
+        const eventColors = {
+            AccountOpened: 'text-purple-400',
+            MoneyDeposited: 'text-green-400',
+            MoneyWithdrawn: 'text-red-400',
+            TransferOut: 'text-orange-400',
+            TransferIn: 'text-blue-400'
+        };
+
+        async function loadHistory() {
+            const accountId = document.getElementById('searchAccountId').value.trim();
+            const container = document.getElementById('historyResult');
+
+            if (!accountId) {
+                container.innerHTML = '<p class="text-red-400">Please enter an Account ID.</p>';
+                return;
+            }
+
+            const res = await fetch(`${API}/api/accounts/${accountId}/history`);
+            const data = await res.json();
+
+            if (!res.ok) {
+                container.innerHTML = `<p class="text-red-400">✗ ${data.error}</p>`;
+                return;
+            }
+
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No events found for this account.</p>';
+                return;
+            }
+
+            const rows = data.map(e => `
+                <div class="flex justify-between items-start py-4 border-b border-gray-800 last:border-0">
+                    <div class="flex gap-4 items-start">
+                        <div class="text-xs text-gray-600 w-6 text-right pt-1">v${e.version}</div>
+                        <div>
+                            <span class="font-semibold ${eventColors[e.eventType] || 'text-white'}">${e.eventType}</span>
+                            <div class="text-gray-500 text-xs mt-1">${new Date(e.createdAt).toLocaleString()}</div>
+                            ${e.relatedAccountId ? `<div class="text-gray-500 text-xs">Related: ${e.relatedAccountId}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-white">₹${e.amount.toLocaleString('en-IN')}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="bg-gray-900 border border-gray-800 rounded-lg p-6">
+                    <div class="text-gray-400 text-xs mb-4">${data.length} events found</div>
+                    ${rows}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
