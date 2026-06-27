@@ -70,7 +70,7 @@ The `/history` endpoint is the core feature — it returns the complete, ordered
 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/event-sourced-ledger.git
+git clone https://github.com/keshavgupta995/event-sourced-ledger.git
 cd event-sourced-ledger
 ```
 
