@@ -40,7 +40,10 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithOpenApiRoutePattern("/swagger/v1/swagger.json");
+    });
 }
 
 app.UseCors("AllowAll");
